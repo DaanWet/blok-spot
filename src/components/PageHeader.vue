@@ -1,0 +1,78 @@
+<script setup lang="ts">
+import { ref, inject } from 'vue';
+import router from '@/router';
+import { sendLogout } from '@/utils/ApiRequests';
+import { AuthUpdateKey, UserAuthKey } from '@/utils/Symbols';
+
+
+const authUpdate = inject(AuthUpdateKey, () => { });
+const userAuth = inject(UserAuthKey, { isAuthenticated: false, userName: "" });
+
+</script>
+
+<template>
+    <header>
+        <div class="navigator">
+            <div class="left">
+                <nav>
+                    <RouterLink to="/">Home</RouterLink>
+                    <RouterLink to="/about">About</RouterLink>
+                    <RouterLink v-if="userAuth.isAuthenticated" to="/results">Resultaten</RouterLink>
+                </nav>
+            </div>
+            <div class="right">
+                Login
+            </div>
+
+
+        </div>
+        <div class="space"></div>
+    </header>
+</template>
+
+<style scoped>
+header .navigator {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.7);
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+    padding: 20px;
+}
+
+.left {
+    display: flex;
+    justify-content: flex-start;
+    gap: 20px;
+}
+
+.space {
+    height: 65px;
+}
+
+header nav {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: 40px;
+
+}
+
+header {
+    position: relative;
+    width: 100%;
+}
+
+.right {
+    padding-left: 10px;
+    padding-right: 10px;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.7);
+    gap: 10px
+}
+</style>
