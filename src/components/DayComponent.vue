@@ -21,11 +21,10 @@ const reservationStore = useReservationsStore()
 <template>
     <div class="card">
         <div class="checkbox">
-            <v-checkbox :value="reservation.checked" class="shrink" hide-details density="compact" @click="(a: any) => {
-                reservationStore.updateReserved(index);
-            }"></v-checkbox>
+            <v-checkbox :modelvalue="reservation.checked" class="shrink" hide-details density="compact"
+                @update:model-value="newValue => reservationStore.updateReserved(reservationStore.reservation.indexOf(reservation), newValue)"></v-checkbox>
         </div>
-        <div>
+        <div class="date txt">
             {{ reservation.day.toLocaleString('nl-BE', { dateStyle: "full" })
             }}
         </div>
@@ -33,22 +32,24 @@ const reservationStore = useReservationsStore()
             <div class="txt">
                 Van:
             </div>
-            <VueDatePicker :value="reservation.start" time-picker :min-time="{ hours: 7 }" :max-time="{ hours: 22 }"
+            <VueDatePicker :model-value="reservation.start" time-picker :min-time="{ hours: 7 }" :max-time="{ hours: 22 }"
                 :start-time="{ hours: 0, minutes: 0 }" minutes-grid-increment="30" minutes-increment="30"
                 :disabled="!reservation.checked"
-                :state="(reservation.start === undefined && reservation.checked) ? false : undefined"
-                @update:model-value="$emit('update:start', $event.target.value)" />
+                :state="(reservation.start === undefined && reservation.checked) ? false : undefined" @update:model-value="newValue => {
+                    reservationStore.updateStart(reservationStore.reservation.indexOf(reservation), newValue);
+                }" />
         </div>
         <div class="picker">
             <div class="txt">
                 Tot:
             </div>
-            <VueDatePicker :value="reservation.end" time-picker
+            <VueDatePicker :model-value="reservation.end" time-picker
                 :min-time="reservation.start === undefined ? { hours: 7 } : reservation.start" :max-time="{ hours: 22 }"
-                :start-time="{ hours: 0, minutes: 0 }" minutes-grid-increment="30" minutes-increment="30"
+                :start-time="{ hours: 0, minutes: 0 }" minutes-grid-incremen t="30" minutes-increment="30"
                 :disabled="!reservation.checked"
-                :state="(reservation.end === undefined && reservation.checked) ? false : undefined"
-                @text-submit="$emit('update:end', $event.target.value)" />
+                :state="(reservation.end === undefined && reservation.checked) ? false : undefined" @update:model-value="newValue => {
+                    reservationStore.updateEnd(reservationStore.reservation.indexOf(reservation), newValue);
+                }" />
         </div>
     </div>
 </template>
@@ -60,10 +61,20 @@ const reservationStore = useReservationsStore()
 
 .picker {
     display: flex;
-    width: 150px;
+    width: 200px;
 }
 
 .picker .txt {
     padding-right: 10px;
+
+}
+
+.txt {
+    align-self: center;
+}
+
+.date {
+    width: 300px;
+    text-align: center;
 }
 </style>
