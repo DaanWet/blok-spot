@@ -1,13 +1,31 @@
 <script setup lang="ts">
-import { ref, inject } from 'vue';
+import { ref, inject, Ref } from 'vue';
 import router from '@/router';
-import { sendLogout } from '@/utils/ApiRequests';
+import { sendLogin, sendLogout } from '@/utils/ApiRequests';
 import { AuthUpdateKey, UserAuthKey } from '@/utils/Symbols';
 
-
+const loginActive = ref(false);
+const name = ref('');
+const password = ref('');
 const authUpdate = inject(AuthUpdateKey, () => { });
 const userAuth = inject(UserAuthKey, { isAuthenticated: false, userName: "" });
+function login() {
+    console.log("login")
+    sendLogin(name.value, password.value).then(async res => {
+        if (res.ok) {
+            console.log("ok")
+            authUpdate();
+            console.log(userAuth.isAuthenticated);
 
+        } else {
+            alert("Wrong password")
+        }
+    });
+}
+
+function toggle() {
+    loginActive.value = !loginActive.value;
+}
 </script>
 
 <template>
@@ -20,8 +38,18 @@ const userAuth = inject(UserAuthKey, { isAuthenticated: false, userName: "" });
                     <RouterLink v-if="userAuth.isAuthenticated" to="/results">Resultaten</RouterLink>
                 </nav>
             </div>
+
             <div class="right">
-                Login
+                <v-menu :close-on-content-click="false">
+                    <template v-slot:activator="{ props }">
+                        <v-btn color="primary" v-bind="props">Login</v-btn>
+                    </template>
+                    <v-form @submit.prevent="login" class="dropdown">
+                        <v-text-field label="Naam" v-model="name" />
+                        <v-text-field label="Password" v-model="password" type="password" />
+                        <v-btn type="submit" block class="mb-8" variant="tonal">Login</v-btn>
+                    </v-form>
+                </v-menu>
             </div>
 
 
@@ -74,5 +102,13 @@ header {
     align-items: center;
     background: rgba(255, 255, 255, 0.7);
     gap: 10px
+}
+
+.dropdown {
+    width: 250px;
+    padding: 20px;
+    padding-bottom: 0px;
+    background: rgb(250, 250, 250);
+
 }
 </style>
