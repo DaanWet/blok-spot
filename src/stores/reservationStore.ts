@@ -1,6 +1,8 @@
 import { defineStore, acceptHMRUpdate } from "pinia";
 import ReservationDay from "@/dataTypes/reservationDay";
-import { getAvailable } from "@/utils/ApiRequests";
+import Reservation from "@/dataTypes/reservation";
+import { getAvailable, getResults } from "@/utils/ApiRequests";
+import ReservationResult from "@/dataTypes/reservationResult";
 const d = new Date();
 d.setDate(14);
 const d2 = new Date();
@@ -9,7 +11,8 @@ d2.setDate(15);
 export const useReservationsStore = defineStore({
     id: 'reservations',
     state: () => ({
-        reservation: [new ReservationDay(new Date()), new ReservationDay(d), new ReservationDay(d2)] as ReservationDay[]
+        reservation: [new ReservationDay(new Date(), { hours: 22, minutes: 0 }), new ReservationDay(d, { hours: 22, minutes: 0 }), new ReservationDay(d2, { hours: 22, minutes: 0 })] as ReservationDay[],
+        reservationResults : [] as ReservationResult[]
     }),
     getters: {
         /*reservation: (state): Array<ReservationDay> =>{
@@ -22,14 +25,17 @@ export const useReservationsStore = defineStore({
                 this.reservation = res as ReservationDay[];
             });
         },
-        addDay(day : Date){
-            this.reservation.push(new ReservationDay(new Date()))
+        fetchAllReservations(){
+            getResults().then(res => {
+                this.reservationResults = res as ReservationResult[]
+                console.log(this.reservationResults);
+                console.log("---")
+            })
         },
         updateReserved(index: any, newValue:Boolean){
             this.reservation[index].checked = newValue;
         },
         updateStart(index: any, start: any){
-            console.log(index);
             this.reservation[index].start = start;
         },
         updateEnd(index: any, end: any){

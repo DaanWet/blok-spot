@@ -1,13 +1,15 @@
 import ReservationDay from "@/dataTypes/reservationDay";
-
-export const baseURL = "http://172.29.128.1:8080" // import.meta.env.VITE_ROOT_API;
+import Reservation from "@/dataTypes/reservation";
+import ReservationResult from "@/dataTypes/reservationResult";
+import { timeString } from "./util";
+export const baseURL = import.meta.env.VITE_ROOT_API;
 
 export async function doGetRequest(url:string, params:Record<string,string> | null = null) {
     const fetchUrl = baseURL + url + (params === null ? "" : "?" + new URLSearchParams(params))
     return fetch(fetchUrl,
         {
             method: "GET",
-            
+            credentials: 'include'
         }
     );
 }
@@ -19,7 +21,7 @@ export async function doPostRequest(url:string, body:object) {
             headers: {
                 "Content-Type": "application/json"
             },
-            credentials: 'same-origin',
+            credentials: 'include',//'same-origin',
             body: JSON.stringify(body),
         }
     );
@@ -35,7 +37,7 @@ export async function sendLogin(username:string, password:string) {
             method: "POST",
             body: formData, 
             headers: new Headers(),
-            credentials: 'same-origin'
+            credentials: 'include'//'same-origin'
         }
     );
 }
@@ -44,27 +46,39 @@ export async function sendLogout() {
     return fetch(baseURL + "/auth/logout",
         {
             method: "POST",
-            credentials: 'same-origin'
+            credentials: 'include'//'same-origin'
         }
     );
 }
 
 export async function makeReservation(name: string, email: string, reservations: ReservationDay[]) {
-    return doPostRequest("/reservations", {"name": name, "email": email, "reservations": reservations})
+    return doPostRequest("/reservations", {"name": name, "email": email, "reservations": reservations.filter(m => m.checked).map(r => r.toJson())})
 }
 
 export async function getAvailable(){
-    console.log("api")
     return doGetRequest("/reservations").then(async (res) => {
-        console.log("??")
-        console.log(res);
         return res.json().then(json => {
             const j = json as any[];
-            return j.map(m => new ReservationDay(new Date(m.day)))
+            return j.map(m => new ReservationDay(new Date(m.day), {"hours": m.end.split(":")[0],  "minutes": m.end.split(":")[1]})).sort((a, b) => a.day.getTime() - b.day.getTime());
         })
     })
 }
 
 export async function addReservationDay(date: Date){
-    return doPostRequest("/reservations/add", {"day": date.toDateString()})
+    return doPostRequest("/reservations/add", {"day": date.toISOString().split("T")[0] })
+}
+
+export async function addReservationDayWithTime(date: Date, time: any){
+    return doPostRequest("/reservations/add", {"day": date.toISOString().split("T")[0] , "end": timeString(time)})
+}
+
+export async function getResults(){
+    return doGetRequest("/reservations/results").then(async (res) => {
+        return res.json().then(json => {
+            let j = json as any[];
+            j =  j.map(m => new ReservationResult(new Date(m.day),  m.end, m.reservations));
+            j.sort((a : ReservationResult, b : ReservationResult) => a.day.getTime() - b.day.getTime());
+            return j
+        })
+    })
 }
