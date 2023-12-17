@@ -11,7 +11,7 @@ d2.setDate(15);
 export const useReservationsStore = defineStore({
     id: 'reservations',
     state: () => ({
-        reservation: [new ReservationDay(new Date(), { hours: 22, minutes: 0 }), new ReservationDay(d, { hours: 22, minutes: 0 }), new ReservationDay(d2, { hours: 22, minutes: 0 })] as ReservationDay[],
+        reservation: [] as ReservationDay[],
         reservationResults : [] as ReservationResult[]
     }),
     getters: {
@@ -22,7 +22,8 @@ export const useReservationsStore = defineStore({
     actions: {
         fetchReservations(){
             getAvailable().then(res => {
-                this.reservation = res as ReservationDay[];
+                
+                this.reservation = res.filter(r => r.day >= new Date()) as ReservationDay[];
             });
         },
         fetchAllReservations(){

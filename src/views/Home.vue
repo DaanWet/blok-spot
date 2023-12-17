@@ -5,7 +5,7 @@ import DayComponent from '@/components/DayComponent.vue';
 import { inject, ref, onBeforeMount, Ref } from 'vue';
 import { useReservationsStore } from '@/stores/reservationStore'
 import VueDatePicker from '@vuepic/vue-datepicker';
-import { makeReservation, addReservationDay, addReservationDayWithTime } from '@/utils/ApiRequests'
+import { makeReservation, addReservationDay, addReservationDayWithStart, addReservationDayWithEnd, addReservationDayWithStartEnd } from '@/utils/ApiRequests'
 import { UserAuthKey } from '@/utils/Symbols';
 import { fail } from 'assert';
 
@@ -16,10 +16,11 @@ const reservations = useReservationsStore();
 reservations.fetchReservations();
 const reses = ref([]);
 const addDay = ref(new Date());
-const addTime = ref(undefined);
+const addStart = ref(undefined);
+const addEnd = ref(undefined);
 const succes = ref(false);
 const failure = ref(false);
-const text = ref('Good')
+const text = ref('Vul alle velden in')
 const disabled = ref(false);
 const form = ref({ reset() { } })
 
@@ -44,10 +45,12 @@ async function submit(event: any) {
         reservations.fetchReservations()
         succes.value = true;
       } else {
+        text.value = "Server error";
         failure.value = true;
       }
     })
   } else {
+    text.value = "Vul alle velden in";
     failure.value = true;
   }
   disabled.value = false;
@@ -60,10 +63,18 @@ function checkTimes(): boolean {
 
 
 async function add(event: any) {
-  if (addTime.value == undefined) {
-    addReservationDay(addDay.value).then(_ => reservations.fetchReservations());
+  if (addStart.value === undefined) {
+    if (addEnd.value === undefined) {
+      await addReservationDay(addDay.value).then(_ => reservations.fetchReservations());
+    } else {
+      await addReservationDayWithEnd(addDay.value, addEnd.value).then(_ => reservations.fetchReservations());
+    }
   } else {
-    await addReservationDayWithTime(addDay.value, addTime.value).then(_ => reservations.fetchReservations());
+    if (addEnd.value === undefined) {
+      await addReservationDayWithStart(addDay.value, addStart.value).then(_ => reservations.fetchReservations());
+    } else {
+      await addReservationDayWithStartEnd(addDay.value, addStart.value, addEnd.value).then(_ => reservations.fetchReservations());
+    }
   }
   reservations.fetchReservations();
 }
@@ -74,6 +85,15 @@ async function add(event: any) {
   <PageHeader />
   <main>
     <div class="container">
+      <div class="explanation text-body-1">
+        <p>Schrijf je hier in voor de blok-spot van Jeugdhuis SOCK.</p>
+        <p>Vul je naam en email in en vink dan aan welke dagen (en bijhorende uren) je graag in het jeugdhuis zou komen
+          studeren.</p>
+        <p>Lukt iets niet? Stuur ons gerust een berichtje op facebook.</p>
+        <p>Hou zeker onze socials in de gaten voor eventuele veranderingen of nieuwe beschikbare dagen.</p>
+      </div>
+
+
       <v-form class="form" @submit.prevent="submit" ref="form" :disabled="disabled">
         <v-text-field label="Naam" v-model="name" :rules="nameRules" />
         <v-text-field label="Email" v-model="email" :rules="emailRules" />
@@ -100,7 +120,7 @@ async function add(event: any) {
           <template v-slot:bottom></template>
         </v-data-table> --->
 
-        <div class="headers">
+        <div class="headers text-body-1">
           <div class="placeholder"></div>
           <div class="placeholder"></div>
           <div class="txt start">
@@ -110,18 +130,21 @@ async function add(event: any) {
             Tot
           </div>
         </div>
-        <div class="list">
+        <div class="list text-body-1">
           <DayComponent v-for="(day, index) in reservations.reservation" :key="index" :reservation="day" :index="index" />
         </div>
         <div class="submit-container">
           <div class="small">
             <v-btn type="submit" block class="mt-2">Reserveer</v-btn>
-            <div v-if="auth.isAuthenticated">
+            <div v-if="auth.isAuthenticated" class="text-body-1">
               <VueDatePicker v-model="addDay" :enable-time-picker="false" />
-              <VueDatePicker v-model="addTime" time-picker />
+              Start:
+              <VueDatePicker v-model="addStart" time-picker />
+              End:
+              <VueDatePicker v-model="addEnd" time-picker />
               <v-btn @click="add">ADD</v-btn>
             </div>
-            <v-alert v-model="failure" type="error" title="Fout" text="Vul alle velden in" closable />
+            <v-alert v-model="failure" type="error" title="Fout" :text="text" closable />
             <v-alert v-model="succes" type="success" title="Success" text="Reservering in orde" closable />
           </div>
         </div>
@@ -131,13 +154,16 @@ async function add(event: any) {
 </template>
 
 <style scoped>
+.explanation {}
+
 .container {
   height: 100%;
+  background-color: rgba(255, 255, 255, 0.72);
+  padding: 5px;
 }
 
 .form {
-  background-color: rgba(255, 255, 255, 0.72);
-  padding: 5px;
+
   height: 100%;
 }
 
@@ -170,16 +196,21 @@ async function add(event: any) {
   .container {
     margin-left: 100px;
     margin-right: 100px;
-    height: 100%
+    height: 100%;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.72);
   }
 
   .form {
-    background-color: rgba(255, 255, 255, 0.72);
-    padding: 20px;
+
     height: 100%;
   }
 
-
+  .explanation {
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-bottom: 20px;
+  }
 
   .submit-container {
     justify-content: center;

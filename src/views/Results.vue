@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useReservationsStore } from '@/stores/reservationStore';
-
+import PageHeader from '@/components/PageHeader.vue';
 const reservations = useReservationsStore();
 reservations.fetchAllReservations();
 const hours = Array(15).fill(0).map((_, i) => {
@@ -21,6 +21,7 @@ function isColored(start: string, end: string, hour: any, minute: any) {
 </script>
 
 <template>
+    <PageHeader />
     <main>
         <div class="container">
             <div v-for="day, index in reservations.reservationResults" :key="index">

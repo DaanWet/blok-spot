@@ -59,7 +59,8 @@ export async function getAvailable(){
     return doGetRequest("/reservations").then(async (res) => {
         return res.json().then(json => {
             const j = json as any[];
-            return j.map(m => new ReservationDay(new Date(m.day), {"hours": m.end.split(":")[0],  "minutes": m.end.split(":")[1]})).sort((a, b) => a.day.getTime() - b.day.getTime());
+            return j.map(m => new ReservationDay(new Date(m.day), {"hours": m.start.split(":")[0],  "minutes": m.start.split(":")[1]},{"hours": m.end.split(":")[0],  "minutes": m.end.split(":")[1]}, m.availableSlots !== 0))
+            .sort((a, b) => a.day.getTime() - b.day.getTime());
         })
     })
 }
@@ -68,9 +69,23 @@ export async function addReservationDay(date: Date){
     return doPostRequest("/reservations/add", {"day": date.toISOString().split("T")[0] })
 }
 
-export async function addReservationDayWithTime(date: Date, time: any){
-    return doPostRequest("/reservations/add", {"day": date.toISOString().split("T")[0] , "end": timeString(time)})
+export async function addReservationDayWithStart(date: Date, start: any){
+    return doPostRequest("/reservations/add", {"day": date.toISOString().split("T")[0] , "start": timeString(start)})
 }
+
+export async function addReservationDayWithEnd(date: Date, end: any){
+    return doPostRequest("/reservations/add", {"day": date.toISOString().split("T")[0] , "end": timeString(end)})
+}
+
+export async function addReservationDayWithStartEnd(date: Date, start: any, end: any){
+    return doPostRequest("/reservations/add", {"day": date.toISOString().split("T")[0] , "start": timeString(start), "end": timeString(end)})
+}
+
+export async function removeReservationDay(date: Date){
+    // actually bad
+    return doPostRequest("/reservations/delete", {"day": date.toISOString().split("T")[0]});
+}
+
 
 export async function getResults(){
     return doGetRequest("/reservations/results").then(async (res) => {
